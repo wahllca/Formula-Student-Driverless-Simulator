@@ -6,9 +6,9 @@ import os
 import time
 
 #adding a random comment line
-#adding another random comment line 
 
 # connect to the AirSim simulator 
+tmp=True
 client = airsim.CarClient()
 client.confirmConnection()
 client.enableApiControl(True)
