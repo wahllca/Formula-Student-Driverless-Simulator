@@ -5,6 +5,8 @@ import numpy as np
 import os
 import time
 
+#adding a random comment line
+
 # connect to the AirSim simulator 
 client = airsim.CarClient()
 client.confirmConnection()
