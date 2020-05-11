@@ -1,8 +1,8 @@
+import setup_path 
 import airsim
 import cv2
 import numpy as np
 import os
-import setup_path 
 import time
 
 # connect to the AirSim simulator 
