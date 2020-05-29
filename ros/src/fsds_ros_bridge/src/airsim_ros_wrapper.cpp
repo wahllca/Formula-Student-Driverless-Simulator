@@ -14,22 +14,23 @@ constexpr char AirsimROSWrapper::P_YML_NAME[];
 constexpr char AirsimROSWrapper::DMODEL_YML_NAME[];
 
 const std::unordered_map<int, std::string> AirsimROSWrapper::image_type_int_to_string_map_ = {
-    {0, "Scene"},
-    {1, "DepthPlanner"},
-    {2, "DepthPerspective"},
-    {3, "DepthVis"},
-    {4, "DisparityNormalized"},
-    {5, "Segmentation"},
-    {6, "SurfaceNormals"},
-    {7, "Infrared"}};
+    { 0, "Scene" },
+    { 1, "DepthPlanner" },
+    { 2, "DepthPerspective" },
+    { 3, "DepthVis" },
+    { 4, "DisparityNormalized" },
+    { 5, "Segmentation" },
+    { 6, "SurfaceNormals" },
+    { 7, "Infrared" }
+};
 
-AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const std::string& host_ip) : nh_(nh),
-                                                                                                                               nh_private_(nh_private),
-                                                                                                                               img_async_spinner_(1, &img_timer_cb_queue_),     // a thread for image callbacks to be 'spun' by img_async_spinner_
-                                                                                                                               lidar_async_spinner_(1, &lidar_timer_cb_queue_), // same as above, but for lidar
-                                                                                                                               airsim_client_(host_ip),
-                                                                                                                               airsim_client_images_(host_ip),
-                                                                                                                               airsim_client_lidar_(host_ip)
+AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle& nh_private, const std::string & host_ip) : 
+    nh_private_(nh_private),
+    img_async_spinner_(1, &img_timer_cb_queue_), // a thread for image callbacks to be 'spun' by img_async_spinner_ 
+    lidar_async_spinner_(1, &lidar_timer_cb_queue_), // same as above, but for lidar
+    airsim_client_(host_ip),
+    airsim_client_images_(host_ip),
+    airsim_client_lidar_(host_ip)
 {
     is_used_lidar_timer_cb_queue_ = false;
     is_used_img_timer_cb_queue_ = false;
@@ -87,7 +88,6 @@ void AirsimROSWrapper::initialize_ros()
 
     // ros params
     double update_airsim_control_every_n_sec;
-    nh_private_.getParam("is_vulkan", is_vulkan_);
     nh_private_.getParam("update_airsim_control_every_n_sec", update_airsim_control_every_n_sec);
 
     create_ros_pubs_from_settings_json();
@@ -293,14 +293,14 @@ void AirsimROSWrapper::create_ros_pubs_from_settings_json()
     initialize_airsim();
 }
 
-ros::Time AirsimROSWrapper::make_ts(uint64_t unreal_ts)
-{
-    if (first_imu_unreal_ts < 0)
-    {
-        first_imu_unreal_ts = unreal_ts;
+ros::Time AirsimROSWrapper::make_ts(uint64_t unreal_ts) {
+    if (first_imu_unreal_ts < 0) {
         first_imu_ros_ts = ros::Time::now();
+        first_imu_unreal_ts = unreal_ts;
     }
-    return first_imu_ros_ts + ros::Duration((unreal_ts - first_imu_unreal_ts) / 1e9);
+
+    int64_t diff = unreal_ts - first_imu_unreal_ts;
+    return  first_imu_ros_ts + ros::Duration(diff/1e9);
 }
 
 // todo add reset by vehicle_name API to airlib
@@ -479,9 +479,6 @@ void AirsimROSWrapper::car_state_timer_cb(const ros::TimerEvent& event)
 {
     try
     {
-        std::unique_lock<std::recursive_mutex> lck(car_control_mutex_);
-        std::cout << "DOO COUNTER: " << airsim_client_.getRefereeState().doo_counter << std::endl;
-        lck.unlock();
 
         std::lock_guard<std::recursive_mutex> guard(car_control_mutex_);
 
@@ -719,15 +716,14 @@ void AirsimROSWrapper::img_response_timer_cb(const ros::TimerEvent& event)
         int ctr = 0;
         for (const auto& airsim_img_request_vehicle_name_pair : airsim_img_request_vehicle_name_pair_vec_)
         {
-            std::vector<ImageResponse> img_response;
-            {
-                ros_bridge::Timer timer(&simGetImagesVecStatistics[ctr]);
-                std::unique_lock<std::recursive_mutex> lck(car_control_mutex_);
-                img_response = airsim_client_images_.simGetImages(airsim_img_request_vehicle_name_pair.first, airsim_img_request_vehicle_name_pair.second);
-                lck.unlock();
-            }
 
-            if (img_response.size() == airsim_img_request_vehicle_name_pair.first.size())
+            std::unique_lock<std::recursive_mutex> lck(car_control_mutex_);
+            const std::vector<ImageResponse*>& img_response = airsim_client_images_.simGetImages(airsim_img_request_vehicle_name_pair.first, airsim_img_request_vehicle_name_pair.second);
+            lck.unlock();
+
+            std::cout << "img_response_timer_cb: " << img_response.front()->image_data_uint8->size() << std::endl;
+
+            if (img_response.size() == airsim_img_request_vehicle_name_pair.first.size()) 
             {
                 process_and_publish_img_response(img_response, image_response_idx, airsim_img_request_vehicle_name_pair.second);
                 image_response_idx += img_response.size();
@@ -795,21 +791,27 @@ cv::Mat AirsimROSWrapper::manual_decode_depth(const ImageResponse& img_response)
     return mat;
 }
 
-sensor_msgs::ImagePtr AirsimROSWrapper::get_img_msg_from_response(const ImageResponse& img_response,
-                                                                  const ros::Time curr_ros_time,
-                                                                  const std::string frame_id)
+
+sensor_msgs::ImagePtr AirsimROSWrapper::get_img_msg_from_response(const ImageResponse* img_response,
+                                                                const ros::Time curr_ros_time, 
+                                                                const std::string frame_id)
 {
     sensor_msgs::ImagePtr img_msg_ptr = boost::make_shared<sensor_msgs::Image>();
-    img_msg_ptr->data = img_response.image_data_uint8;
-    img_msg_ptr->step = img_response.width * 3; // todo un-hardcode. image_width*num_bytes
-    img_msg_ptr->header.stamp = make_ts(img_response.time_stamp);
+
+    std::vector<unsigned char> v;
+    for(int i = 0; i < img_response->image_data_uint8->size(); i++){
+        v.push_back((*img_response->image_data_uint8)[i]);
+    }
+
+    img_msg_ptr->data = v;
+    img_msg_ptr->step = img_response->width * 8; // todo un-hardcode. image_width*num_bytes
+    img_msg_ptr->header.stamp = make_ts(img_response->time_stamp);
     img_msg_ptr->header.frame_id = frame_id;
-    img_msg_ptr->height = img_response.height;
-    img_msg_ptr->width = img_response.width;
-    img_msg_ptr->encoding = "bgr8";
-    if (is_vulkan_)
-        img_msg_ptr->encoding = "rgb8";
+    img_msg_ptr->height = img_response->height;
+    img_msg_ptr->width = img_response->width;
+    img_msg_ptr->encoding = "bgra8";
     img_msg_ptr->is_bigendian = 0;
+    std::cout << "pixel points before sending: " << img_msg_ptr->data.size() << std::endl;
     return img_msg_ptr;
 }
 
@@ -847,25 +849,26 @@ sensor_msgs::CameraInfo AirsimROSWrapper::generate_cam_info(const std::string& c
     return cam_info_msg;
 }
 
-void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageResponse>& img_response_vec, const int img_response_idx, const std::string& vehicle_name)
-{
+
+void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageResponse*>& img_response_vec, const int img_response_idx, const std::string& vehicle_name)
+{    
     // todo add option to use airsim time (image_response.TTimePoint) like Gazebo /use_sim_time param
     ros::Time curr_ros_time = ros::Time::now();
     int img_response_idx_internal = img_response_idx;
 
-    for (const auto& curr_img_response : img_response_vec)
+    for (const ImageResponse* curr_img_response : img_response_vec)
     {
         // if a render request failed for whatever reason, this img will be empty.
         // Attempting to use a make_ts(0) results in ros::Duration runtime error.
-        if (curr_img_response.time_stamp == 0)
-            continue;
 
-        // todo publishing a tf for each capture type seems stupid. but it foolproofs us against render thread's async stuff, I hope.
-        // Ideally, we should loop over cameras and then captures, and publish only one tf.
-        publish_camera_tf(curr_img_response, curr_ros_time, vehicle_name, curr_img_response.camera_name);
+        if (curr_img_response->time_stamp == 0) continue;
 
-        // todo simGetCameraInfo is wrong + also it's only for image type -1.
-        // msr::airlib::CameraInfo camera_info = airsim_client_.simGetCameraInfo(curr_img_response.camera_name);
+        // todo publishing a tf for each capture type seems stupid. but it foolproofs us against render thread's async stuff, I hope. 
+        // Ideally, we should loop over cameras and then captures, and publish only one tf.  
+        publish_camera_tf(*curr_img_response, curr_ros_time, vehicle_name, curr_img_response->camera_name);
+
+        // todo simGetCameraInfo is wrong + also it's only for image type -1.  
+        msr::airlib::CameraInfo camera_info = airsim_client_.simGetCameraInfo(curr_img_response->camera_name);
 
         // update timestamp of saved cam info msgs
         camera_info_msg_vec_[img_response_idx_internal].header.stamp = curr_ros_time;
@@ -874,20 +877,22 @@ void AirsimROSWrapper::process_and_publish_img_response(const std::vector<ImageR
             cam_info_pub_vec_[img_response_idx_internal].publish(camera_info_msg_vec_[img_response_idx_internal]);
         }
 
+        //special image types disabled cuz we broke them and are currently not in the business of fixing it.
         // DepthPlanner / DepthPerspective / DepthVis / DisparityNormalized
-        if (curr_img_response.pixels_as_float)
-        {
-            image_pub_vec_[img_response_idx_internal].publish(get_depth_img_msg_from_response(curr_img_response,
-                                                                                              curr_ros_time,
-                                                                                              curr_img_response.camera_name + "_optical"));
-        }
-        // Scene / Segmentation / SurfaceNormals / Infrared
-        else
-        {
-            image_pub_vec_[img_response_idx_internal].publish(get_img_msg_from_response(curr_img_response,
-                                                                                        curr_ros_time,
-                                                                                        curr_img_response.camera_name + "_optical"));
-        }
+
+        // if (curr_img_response.pixels_as_float)
+        // {
+        //     image_pub_vec_[img_response_idx_internal].publish(get_depth_img_msg_from_response(curr_img_response, 
+        //                                             curr_ros_time, 
+        //                                             curr_img_response.camera_name + "_optical"));
+        // }
+        // // Scene / Segmentation / SurfaceNormals / Infrared
+        // else
+        // {
+            image_pub_vec_[img_response_idx_internal].publish(get_img_msg_from_response(curr_img_response, 
+                                                    curr_ros_time, 
+                                                    curr_img_response->camera_name + "_optical"));
+        // }
         img_response_idx_internal++;
     }
 }

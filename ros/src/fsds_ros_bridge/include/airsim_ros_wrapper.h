@@ -73,8 +73,9 @@ struct SimpleMatrix
 class AirsimROSWrapper
 {
 public:
-    AirsimROSWrapper(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const std::string& host_ip);
-    ~AirsimROSWrapper(){};
+
+    AirsimROSWrapper(const ros::NodeHandle& nh_private, const std::string & host_ip);
+    ~AirsimROSWrapper() {}; 
 
     void initialize_airsim();
     void initialize_ros();
@@ -141,10 +142,10 @@ private:
     sensor_msgs::CameraInfo generate_cam_info(const std::string& camera_name, const CameraSetting& camera_setting, const CaptureSetting& capture_setting) const;
     cv::Mat manual_decode_depth(const ImageResponse& img_response) const;
 
-    sensor_msgs::ImagePtr get_img_msg_from_response(const ImageResponse& img_response, const ros::Time curr_ros_time, const std::string frame_id);
+    sensor_msgs::ImagePtr get_img_msg_from_response(const ImageResponse* img_response, const ros::Time curr_ros_time, const std::string frame_id);
     sensor_msgs::ImagePtr get_depth_img_msg_from_response(const ImageResponse& img_response, const ros::Time curr_ros_time, const std::string frame_id);
-
-    void process_and_publish_img_response(const std::vector<ImageResponse>& img_response_vec, const int img_response_idx, const std::string& vehicle_name);
+    
+    void process_and_publish_img_response(const std::vector<ImageResponse*>& img_response_vec, const int img_response_idx, const std::string& vehicle_name);
 
     // methods which parse setting json ang generate ros pubsubsrv
     void create_ros_pubs_from_settings_json();
@@ -205,13 +206,11 @@ private:
     std::map<std::string, std::string> vehicle_imu_map_;
     std::map<std::string, std::string> vehicle_lidar_map_;
     std::vector<geometry_msgs::TransformStamped> static_tf_msg_vec_;
-    bool is_vulkan_; // rosparam obtained from launch file. If vulkan is being used, we BGR encoding instead of RGB
 
     msr::airlib::CarRpcLibClient airsim_client_;
     msr::airlib::CarRpcLibClient airsim_client_images_;
     msr::airlib::CarRpcLibClient airsim_client_lidar_;
 
-    ros::NodeHandle nh_;
     ros::NodeHandle nh_private_;
 
     // todo not sure if async spinners shuold be inside this class, or should be instantiated in fsds_ros_bridge.cpp, and cb queues should be public
