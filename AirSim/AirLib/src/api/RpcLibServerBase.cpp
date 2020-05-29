@@ -125,7 +125,7 @@ RpcLibServerBase::RpcLibServerBase(ApiProvider* api_provider, const std::string&
     pimpl_->server.bind("simGetImages", [&](const std::vector<RpcLibAdapatorsBase::ImageRequest>& request_adapter, const std::string& vehicle_name) -> 
         vector<RpcLibAdapatorsBase::ImageResponse> {
             std::vector<ImageCaptureBase::ImageResponse> responses;
-	    for (auto& request : request_adapter) {
+        for (auto i = 0; i < request_adapter.size(); i++) {
 	      responses.push_back(ImageCaptureBase::ImageResponse());
         }
 
