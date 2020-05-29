@@ -14,7 +14,6 @@ constexpr char AirsimROSWrapper::P_YML_NAME[];
 constexpr char AirsimROSWrapper::DMODEL_YML_NAME[];
 
 const std::unordered_map<int, std::string> AirsimROSWrapper::image_type_int_to_string_map_ = {
-<<<<<<< HEAD
     { 0, "Scene" },
     { 1, "DepthPlanner" },
     { 2, "DepthPerspective" },
@@ -32,24 +31,6 @@ AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle& nh_private, const std:
     airsim_client_(host_ip),
     airsim_client_images_(host_ip),
     airsim_client_lidar_(host_ip)
-=======
-    {0, "Scene"},
-    {1, "DepthPlanner"},
-    {2, "DepthPerspective"},
-    {3, "DepthVis"},
-    {4, "DisparityNormalized"},
-    {5, "Segmentation"},
-    {6, "SurfaceNormals"},
-    {7, "Infrared"}};
-
-AirsimROSWrapper::AirsimROSWrapper(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const std::string& host_ip) : nh_(nh),
-                                                                                                                               nh_private_(nh_private),
-                                                                                                                               img_async_spinner_(1, &img_timer_cb_queue_),     // a thread for image callbacks to be 'spun' by img_async_spinner_
-                                                                                                                               lidar_async_spinner_(1, &lidar_timer_cb_queue_), // same as above, but for lidar
-                                                                                                                               airsim_client_(host_ip),
-                                                                                                                               airsim_client_images_(host_ip),
-                                                                                                                               airsim_client_lidar_(host_ip)
->>>>>>> origin/windows
 {
     is_used_lidar_timer_cb_queue_ = false;
     is_used_img_timer_cb_queue_ = false;

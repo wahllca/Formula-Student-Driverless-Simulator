@@ -73,13 +73,8 @@ struct SimpleMatrix
 class AirsimROSWrapper
 {
 public:
-<<<<<<< HEAD
     AirsimROSWrapper(const ros::NodeHandle& nh_private, const std::string & host_ip);
     ~AirsimROSWrapper() {}; 
-=======
-    AirsimROSWrapper(const ros::NodeHandle& nh, const ros::NodeHandle& nh_private, const std::string& host_ip);
-    ~AirsimROSWrapper(){};
->>>>>>> origin/windows
 
     void initialize_airsim();
     void initialize_ros();
@@ -148,13 +143,8 @@ private:
 
     sensor_msgs::ImagePtr get_img_msg_from_response(const ImageResponse* img_response, const ros::Time curr_ros_time, const std::string frame_id);
     sensor_msgs::ImagePtr get_depth_img_msg_from_response(const ImageResponse& img_response, const ros::Time curr_ros_time, const std::string frame_id);
-<<<<<<< HEAD
     
     void process_and_publish_img_response(const std::vector<ImageResponse*>& img_response_vec, const int img_response_idx, const std::string& vehicle_name);
-=======
-
-    void process_and_publish_img_response(const std::vector<ImageResponse>& img_response_vec, const int img_response_idx, const std::string& vehicle_name);
->>>>>>> origin/windows
 
     // methods which parse setting json ang generate ros pubsubsrv
     void create_ros_pubs_from_settings_json();
