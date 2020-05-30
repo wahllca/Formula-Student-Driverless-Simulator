@@ -3,7 +3,7 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "Async/TaskGraphInterfaces.h"
 #include "ImageUtils.h"
-#include "Containers/UE4ProjectString.h"
+//#include "Containers/UE4ProjectString.h"
 #include <thread>
 #include <chrono>
 #include "common/common_utils/BufferPool.h"
@@ -42,7 +42,7 @@ void RenderRequest::RenderThreadScreenshotTask(RenderRequest::RenderResult &resu
     uint32 width = fast_cap_texture->GetSizeX();
     uint32 height = fast_cap_texture->GetSizeY();
     uint32 stride;
-    auto *src = (const unsigned char*)RHILockTexture2D(fast_cap_texture, 0, RLM_ReadOnly, stride, false); // needs to be on render thread
+    auto *src = (const unsigned char*)RHILockTexture2D(fast_cap_texture, 0, RLM_WriteOnly, stride, false); // needs to be on render thread
 
     result.time_stamp = msr::airlib::ClockFactory::get()->nowNanos();
     result.pixels = buffer_pool_->GetBufferExactSize(height*stride);

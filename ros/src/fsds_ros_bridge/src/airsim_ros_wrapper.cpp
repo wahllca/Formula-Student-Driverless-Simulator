@@ -801,6 +801,8 @@ sensor_msgs::ImagePtr AirsimROSWrapper::get_img_msg_from_response(const ImageRes
 {
     sensor_msgs::ImagePtr img_msg_ptr = boost::make_shared<sensor_msgs::Image>();
     img_msg_ptr->data = *img_response.image_data_uint8;
+    std::cout<<"Hiiii"<<std::endl;
+    std::cout<<img_msg_ptr->data.size()<<std::endl;
     img_msg_ptr->step = img_response.width * 3; // todo un-hardcode. image_width*num_bytes
     img_msg_ptr->header.stamp = make_ts(img_response.time_stamp);
     img_msg_ptr->header.frame_id = frame_id;
