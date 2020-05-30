@@ -122,18 +122,27 @@ RpcLibServerBase::RpcLibServerBase(ApiProvider* api_provider, const std::string&
     pimpl_->server.bind("armDisarm", [&](bool arm, const std::string& vehicle_name) -> bool { 
         return getVehicleApi(vehicle_name)->armDisarm(arm);
     });
-    pimpl_->server.bind("simGetImages", [&](const std::vector<RpcLibAdapatorsBase::ImageRequest>& request_adapter, const std::string& vehicle_name) -> 
-        vector<RpcLibAdapatorsBase::ImageResponse> {
-            const auto& response = getVehicleSimApi(vehicle_name)->getImages(RpcLibAdapatorsBase::ImageRequest::to(request_adapter));
-            return RpcLibAdapatorsBase::ImageResponse::from(response);
+
+    pimpl_->server.bind("simGetImages", [&](const std::vector<RpcLibAdapatorsBase::ImageRequest>& request_adapter, const std::string& vehicle_name) -> vector<RpcLibAdapatorsBase::ImageResponse> {
+        std::vector<ImageCaptureBase::ImageResponse> responses;
+        for (RpcLibAdapatorsBase::ImageRequest request : request_adapter)
+            responses.push_back(ImageCaptureBase::ImageResponse());
+        getVehicleSimApi(vehicle_name)->getImages(RpcLibAdapatorsBase::ImageRequest::to(request_adapter), responses);
+        return RpcLibAdapatorsBase::ImageResponse::from(responses);
     });
+
     pimpl_->server.bind("simGetImage", [&](const std::string& camera_name, ImageCaptureBase::ImageType type, const std::string& vehicle_name) -> vector<uint8_t> {
-        auto result = getVehicleSimApi(vehicle_name)->getImage(camera_name, type);
-        if (result.size() == 0) {
-            // rpclib has a bug with serializing empty vectors, so we return a 1 byte vector instead.
-            result.push_back(0);
-        }
-        return result;
+
+        ImageCaptureBase::ImageRequest request(camera_name, type);
+        ImageCaptureBase::ImageResponse response;
+
+        getVehicleSimApi(vehicle_name)->getImage(request, response);
+
+        // rpclib has a bug with serializing empty vectors, so we return a 1 byte vector instead.
+        if (response.image_data_uint8->size() == 0)
+            response.image_data_uint8->push_back(0);
+
+        return *response.image_data_uint8;
     });
 
     pimpl_->server.bind("simGetMeshPositionVertexBuffers", [&]() ->vector<RpcLibAdapatorsBase::MeshPositionVertexBuffersResponse> {
@@ -309,9 +318,9 @@ RpcLibServerBase::RpcLibServerBase(ApiProvider* api_provider, const std::string&
         getVehicleApi(vehicle_name)->cancelLastTask();
     });
 
-	pimpl_->server.bind("simSwapTextures", [&](const std::string tag, int tex_id, int component_id, int material_id) -> std::vector<string> {
-		return *getWorldSimApi()->swapTextures(tag, tex_id, component_id, material_id);
-	});
+    pimpl_->server.bind("simSwapTextures", [&](const std::string tag, int tex_id, int component_id, int material_id) -> std::vector<string> {
+        return *getWorldSimApi()->swapTextures(tag, tex_id, component_id, material_id);
+    });
 
     //if we don't suppress then server will bomb out for exceptions raised by any method
     pimpl_->server.suppress_exceptions(true);
