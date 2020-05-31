@@ -7,6 +7,7 @@ STRICT_MODE_OFF //Ignore errors inside the rpc package
     STRICT_MODE_ON
 
 #include "ros/ros.h"
+#include <ros/console.h>
 #include <ros/spinner.h>
 #include <image_transport/image_transport.h>
 #include "common/AirSimSettings.hpp"
@@ -24,21 +25,22 @@ image_transport::Publisher* image_pub;
 
 std::string camera_name = "";
 
-ros::Time first_imu_ros_ts;
-int64_t first_imu_unreal_ts = -1;
+ros::Time first_ros_ts;
+int64_t first_unreal_ts = -1;
 
 ros::Time make_ts(uint64_t unreal_ts)
 {
-    if (first_imu_unreal_ts < 0)
+    if (first_unreal_ts < 0)
     {
-        first_imu_unreal_ts = unreal_ts;
-        first_imu_ros_ts = ros::Time::now();
+        first_unreal_ts = unreal_ts;
+        first_ros_ts = ros::Time::now();
     }
-    return first_imu_ros_ts + ros::Duration((unreal_ts - first_imu_unreal_ts) / 1e9);
+    return first_imu_ros_ts + ros::Duration((unreal_ts - first_unreal_ts) / 1e9);
 }
 
 void doImageUpdate(const ros::TimerEvent&)
 {
+    ROS_DEBUG("3");
     std::vector<ImageRequest> req;
     req.push_back(ImageRequest(camera_name, ImageType::Scene, false, false));
     std::vector<ImageResponse*> img_response = airsim_api->simGetImages(req, "FSCar");
@@ -55,6 +57,8 @@ void doImageUpdate(const ros::TimerEvent&)
 
     sensor_msgs::ImagePtr img_msg = boost::make_shared<sensor_msgs::Image>();
 
+    ROS_DEBUG("4");
+
     std::vector<unsigned char> v(curr_img_response->image_data_uint8->size());
     for (int i = 0; i < curr_img_response->image_data_uint8->size(); i++) {
         v[i] = (*curr_img_response->image_data_uint8)[i];
@@ -67,6 +71,8 @@ void doImageUpdate(const ros::TimerEvent&)
     img_msg->width = curr_img_response->width;
     img_msg->encoding = "bgar8";
     img_msg->is_bigendian = 0;
+    
+    ROS_DEBUG("5");
 
     image_pub->publish(img_msg);
 }
@@ -84,6 +90,8 @@ int main(int argc, char ** argv)
     auto p = image_transporter->advertise("/fsds/camera/" + camera_name, 1);
     image_pub = &p;
 
+    ROS_DEBUG("1");
+
 
     try {
         airsim_api->confirmConnection();
@@ -92,6 +100,7 @@ int main(int argc, char ** argv)
         std::cout << "Exception raised by the API, something went wrong." << std::endl
                   << msg << std::endl;
     }
+    ROS_DEBUG("2");
 
     ros::Timer timer = nh.createTimer(ros::Duration(0.03), doImageUpdate);
     ros::spin();
