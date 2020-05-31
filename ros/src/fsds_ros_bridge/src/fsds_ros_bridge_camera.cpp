@@ -40,7 +40,6 @@ ros::Time make_ts(uint64_t unreal_ts)
 
 void doImageUpdate(const ros::TimerEvent&)
 {
-    ROS_DEBUG("3");
     std::vector<ImageRequest> req;
     req.push_back(ImageRequest(camera_name, ImageType::Scene, false, false));
     std::vector<ImageResponse*> img_response = airsim_api->simGetImages(req, "FSCar");
@@ -57,8 +56,6 @@ void doImageUpdate(const ros::TimerEvent&)
 
     sensor_msgs::ImagePtr img_msg = boost::make_shared<sensor_msgs::Image>();
 
-    ROS_DEBUG("4");
-
     std::vector<unsigned char> v(curr_img_response->image_data_uint8->size());
     for (int i = 0; i < curr_img_response->image_data_uint8->size(); i++) {
         v[i] = (*curr_img_response->image_data_uint8)[i];
@@ -71,8 +68,6 @@ void doImageUpdate(const ros::TimerEvent&)
     img_msg->width = curr_img_response->width;
     img_msg->encoding = "bgar8";
     img_msg->is_bigendian = 0;
-
-    ROS_DEBUG("5");
 
     image_pub->publish(img_msg);
 }
@@ -90,8 +85,6 @@ int main(int argc, char ** argv)
     auto p = image_transporter->advertise("/fsds/camera/" + camera_name, 1);
     image_pub = &p;
 
-    ROS_DEBUG("1");
-
 
     try {
         airsim_api->confirmConnection();
@@ -100,9 +93,8 @@ int main(int argc, char ** argv)
         std::cout << "Exception raised by the API, something went wrong." << std::endl
                   << msg << std::endl;
     }
-    ROS_DEBUG("2");
 
-    ros::Timer timer = nh.createTimer(ros::Duration(0.01), doImageUpdate);
+    ros::Timer timer = nh.createTimer(ros::Duration(0.1), doImageUpdate);
     ros::spin();
     return 0;
 } 
