@@ -102,7 +102,7 @@ int main(int argc, char ** argv)
     }
     ROS_DEBUG("2");
 
-    ros::Timer timer = nh.createTimer(ros::Duration(0.03), doImageUpdate);
+    ros::Timer timer = nh.createTimer(ros::Duration(0.01), doImageUpdate);
     ros::spin();
     return 0;
 } 
