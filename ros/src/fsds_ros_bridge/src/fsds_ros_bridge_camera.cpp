@@ -4,26 +4,28 @@
 #include <image_transport/image_transport.h>
 
 
-msr::airlib::CarRpcLibClient* airsimapi;
-image_transport::ImageTransport* imagetransport;
-image_transport::Publisher* imagepub;
+msr::airlib::CarRpcLibClient* airsim_api;
+image_transport::ImageTransport* image_transport;
+image_transport::Publisher* image_pub;
 
-std::string cameraname;
+std::string camera_name = "front_right_custom";
+std::string airsim_ip = "localhost";
 
 int main(int argc, char ** argv)
 {
     ros::init(argc, argv, "fsds_ros_bridge_camera");
     ros::NodeHandle nh("~");
-    imagetransport = new image_transport::ImageTransport(nh);
+    image_transport = new image_transport::ImageTransport(nh);
 
-    cameraname = nh.getParam("cameraname", "front_right_custom")
-    airsimapi = new msr::airlib::CarRpcLibClient(nh.getParam("host_ip", "localhost"));
+    nh.getParam("camera_name", camera_name);
+    nh.getParam("airsim_ip", airsim_ip)
+    airsim_api = new msr::airlib::CarRpcLibClient(airsim_ip);
 
-    imagepub = it.advertise("/fsds/camera/" + cameraname, 1);
+    image_pub = image_transport.advertise("/fsds/camera/" + camera_name, 1);
 
 
     try {
-        airsimapi.confirmConnection();
+        airsim_api.confirmConnection();
     } catch (rpc::rpc_error& e) {
         std::string msg = e.get_error().as<std::string>();
         std::cout << "Exception raised by the API, something went wrong." << std::endl
@@ -37,7 +39,7 @@ int main(int argc, char ** argv)
 
 void doImageUpdate(const ros::TimerEvent&)
 {
-   std::vector<ImageResponse*> img_response = airsimapi->simGetImages(cameraname, VehicleCameraBase::ImageType::Scene);
+   std::vector<ImageResponse*> img_response = airsim_api->simGetImages(camera_name, VehicleCameraBase::ImageType::Scene);
 
     // if a render request failed for whatever reason, this img will be empty.
     // Attempting to use a make_ts(0) results in ros::Duration runtime error.
@@ -64,7 +66,7 @@ void doImageUpdate(const ros::TimerEvent&)
     img_msg->encoding = "bgar8";
     img_msg->is_bigendian = 0;
 
-    imagepub->publish(img_msg);
+    image_pub->publish(img_msg);
 }
 
 ros::Time first_imu_ros_ts;
