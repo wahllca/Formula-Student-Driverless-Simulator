@@ -35,7 +35,7 @@ ros::Time make_ts(uint64_t unreal_ts)
         first_unreal_ts = unreal_ts;
         first_ros_ts = ros::Time::now();
     }
-    return first_imu_ros_ts + ros::Duration((unreal_ts - first_unreal_ts) / 1e9);
+    return first_ros_ts + ros::Duration((unreal_ts - first_unreal_ts) / 1e9);
 }
 
 void doImageUpdate(const ros::TimerEvent&)
@@ -71,7 +71,7 @@ void doImageUpdate(const ros::TimerEvent&)
     img_msg->width = curr_img_response->width;
     img_msg->encoding = "bgar8";
     img_msg->is_bigendian = 0;
-    
+
     ROS_DEBUG("5");
 
     image_pub->publish(img_msg);
