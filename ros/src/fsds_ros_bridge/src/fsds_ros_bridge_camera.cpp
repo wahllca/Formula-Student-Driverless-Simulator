@@ -1,3 +1,11 @@
+#include "common/common_utils/StrictMode.hpp"
+STRICT_MODE_OFF //Ignore errors inside the rpc package
+#ifndef RPCLIB_MSGPACK
+#define RPCLIB_MSGPACK clmdep_msgpack
+#endif // !RPCLIB_MSGPACK
+#include "rpc/rpc_error.h"
+    STRICT_MODE_ON
+
 #include "ros/ros.h"
 #include <ros/spinner.h>
 #include <image_transport/image_transport.h>
@@ -38,7 +46,7 @@ void doImageUpdate(const ros::TimerEvent&)
 
     // if a render request failed for whatever reason, this img will be empty.
     // Attempting to use a make_ts(0) results in ros::Duration runtime error.
-    if (img_response.size() == null || img_response.size() == 0 || img_response[0]->time_stamp == 0)
+    if (img_response.size() == 0 || img_response[0]->time_stamp == 0)
         return;
 
     ImageResponse* curr_img_response = img_response[0];
