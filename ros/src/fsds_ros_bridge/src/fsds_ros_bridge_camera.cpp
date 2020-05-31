@@ -1,7 +1,11 @@
 #include "ros/ros.h"
-#include "airsim_ros_wrapper.h"
 #include <ros/spinner.h>
 #include <image_transport/image_transport.h>
+
+
+typedef msr::airlib::ImageCaptureBase::ImageRequest ImageRequest;
+typedef msr::airlib::ImageCaptureBase::ImageResponse ImageResponse;
+typedef msr::airlib::ImageCaptureBase::ImageType ImageType;
 
 
 msr::airlib::CarRpcLibClient* airsim_api;
@@ -14,7 +18,7 @@ std::string airsim_ip = "localhost";
 ros::Time first_imu_ros_ts;
 int64_t first_imu_unreal_ts = -1;
 
-ros::Time AirsimROSWrapper::make_ts(uint64_t unreal_ts)
+ros::Time make_ts(uint64_t unreal_ts)
 {
     if (first_imu_unreal_ts < 0)
     {
@@ -26,12 +30,14 @@ ros::Time AirsimROSWrapper::make_ts(uint64_t unreal_ts)
 
 void doImageUpdate(const ros::TimerEvent&)
 {
-   std::vector<ImageResponse*> img_response = airsim_api->simGetImages(camera_name, msr::airlib::VehicleCameraBase::ImageType::Scene);
+    std::vector<ImageRequest> req;
+    req.push_back(ImageRequest(camera_name, ImageType::Scene, false, false));
+    std::vector<ImageResponse*> img_response = airsim_api->simGetImages(req, "FSCar");
 
     // if a render request failed for whatever reason, this img will be empty.
     // Attempting to use a make_ts(0) results in ros::Duration runtime error.
     if (img_response.size() == null || img_response.size() == 0 || img_response[0]->time_stamp == 0)
-        continue;
+        return;
 
     ImageResponse* curr_img_response = img_response[0];
 
@@ -66,18 +72,19 @@ int main(int argc, char ** argv)
     nh.getParam("airsim_ip", airsim_ip);
     airsim_api = new msr::airlib::CarRpcLibClient(airsim_ip);
 
-    image_pub = &image_transporter->advertise("/fsds/camera/" + camera_name, 1);
+    auto p = image_transporter->advertise("/fsds/camera/" + camera_name, 1);
+    image_pub = &p;
 
 
     try {
-        airsim_api.confirmConnection();
+        airsim_api->confirmConnection();
     } catch (rpc::rpc_error& e) {
         std::string msg = e.get_error().as<std::string>();
         std::cout << "Exception raised by the API, something went wrong." << std::endl
                   << msg << std::endl;
     }
 
-    ros::Timer timer = n.createTimer(ros::Duration(0.03), doImageUpdate);
+    ros::Timer timer = nh.createTimer(ros::Duration(0.03), doImageUpdate);
     ros::spin();
     return 0;
 } 
