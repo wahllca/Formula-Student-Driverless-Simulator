@@ -1,6 +1,8 @@
 #include "ros/ros.h"
 #include <ros/spinner.h>
 #include <image_transport/image_transport.h>
+#include "common/AirSimSettings.hpp"
+#include "vehicles/car/api/CarRpcLibClient.hpp"
 
 
 typedef msr::airlib::ImageCaptureBase::ImageRequest ImageRequest;
