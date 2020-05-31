@@ -23,7 +23,6 @@ image_transport::ImageTransport* image_transporter;
 image_transport::Publisher* image_pub;
 
 std::string camera_name = "";
-std::string airsim_ip = "";
 
 ros::Time first_imu_ros_ts;
 int64_t first_imu_unreal_ts = -1;
@@ -79,8 +78,8 @@ int main(int argc, char ** argv)
     image_transporter = new image_transport::ImageTransport(nh);
 
     nh.param<std::string>("camera_name", camera_name, "front_right_custom");
-    nh.param<std::string>("airsim_ip", airsim_ip, "localhost");
-    airsim_api = new msr::airlib::CarRpcLibClient(airsim_ip);
+    msr::airlib::CarRpcLibClient client;
+    airsim_api = &client;
 
     auto p = image_transporter->advertise("/fsds/camera/" + camera_name, 1);
     image_pub = &p;
