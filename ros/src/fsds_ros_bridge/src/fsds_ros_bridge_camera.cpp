@@ -5,37 +5,11 @@
 
 
 msr::airlib::CarRpcLibClient* airsim_api;
-image_transport::ImageTransport* image_transport;
+image_transport::ImageTransport* image_transporter;
 image_transport::Publisher* image_pub;
 
 std::string camera_name = "front_right_custom";
 std::string airsim_ip = "localhost";
-
-int main(int argc, char ** argv)
-{
-    ros::init(argc, argv, "fsds_ros_bridge_camera");
-    ros::NodeHandle nh("~");
-    image_transport = new image_transport::ImageTransport(nh);
-
-    nh.getParam("camera_name", camera_name);
-    nh.getParam("airsim_ip", airsim_ip)
-    airsim_api = new msr::airlib::CarRpcLibClient(airsim_ip);
-
-    image_pub = image_transport.advertise("/fsds/camera/" + camera_name, 1);
-
-
-    try {
-        airsim_api.confirmConnection();
-    } catch (rpc::rpc_error& e) {
-        std::string msg = e.get_error().as<std::string>();
-        std::cout << "Exception raised by the API, something went wrong." << std::endl
-                  << msg << std::endl;
-    }
-
-    ros::Timer timer = n.createTimer(ros::Duration(0.03), doImageUpdate);
-    ros::spin();
-    return 0;
-} 
 
 void doImageUpdate(const ros::TimerEvent&)
 {
@@ -68,6 +42,32 @@ void doImageUpdate(const ros::TimerEvent&)
 
     image_pub->publish(img_msg);
 }
+
+int main(int argc, char ** argv)
+{
+    ros::init(argc, argv, "fsds_ros_bridge_camera");
+    ros::NodeHandle nh("~");
+    image_transporter = new image_transport::ImageTransport(nh);
+
+    nh.getParam("camera_name", camera_name);
+    nh.getParam("airsim_ip", airsim_ip);
+    airsim_api = new msr::airlib::CarRpcLibClient(airsim_ip);
+
+    image_pub = image_transporter->advertise("/fsds/camera/" + camera_name, 1);
+
+
+    try {
+        airsim_api.confirmConnection();
+    } catch (rpc::rpc_error& e) {
+        std::string msg = e.get_error().as<std::string>();
+        std::cout << "Exception raised by the API, something went wrong." << std::endl
+                  << msg << std::endl;
+    }
+
+    ros::Timer timer = n.createTimer(ros::Duration(0.03), doImageUpdate);
+    ros::spin();
+    return 0;
+} 
 
 ros::Time first_imu_ros_ts;
 int64_t first_imu_unreal_ts = -1;
