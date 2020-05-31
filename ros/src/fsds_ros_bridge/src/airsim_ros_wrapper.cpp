@@ -479,9 +479,9 @@ void AirsimROSWrapper::car_state_timer_cb(const ros::TimerEvent& event)
 {
     try
     {
-        std::unique_lock<std::recursive_mutex> lck(car_control_mutex_);
-        std::cout << "DOO COUNTER: " << airsim_client_.getRefereeState().doo_counter << std::endl;
-        lck.unlock();
+        // std::unique_lock<std::recursive_mutex> lck(car_control_mutex_);
+        // std::cout << "DOO COUNTER: " << airsim_client_.getRefereeState().doo_counter << std::endl;
+        // lck.unlock();
 
         std::lock_guard<std::recursive_mutex> guard(car_control_mutex_);
 
