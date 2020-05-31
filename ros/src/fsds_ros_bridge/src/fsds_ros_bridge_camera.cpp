@@ -11,13 +11,26 @@ image_transport::Publisher* image_pub;
 std::string camera_name = "front_right_custom";
 std::string airsim_ip = "localhost";
 
+ros::Time first_imu_ros_ts;
+int64_t first_imu_unreal_ts = -1;
+
+ros::Time AirsimROSWrapper::make_ts(uint64_t unreal_ts)
+{
+    if (first_imu_unreal_ts < 0)
+    {
+        first_imu_unreal_ts = unreal_ts;
+        first_imu_ros_ts = ros::Time::now();
+    }
+    return first_imu_ros_ts + ros::Duration((unreal_ts - first_imu_unreal_ts) / 1e9);
+}
+
 void doImageUpdate(const ros::TimerEvent&)
 {
-   std::vector<ImageResponse*> img_response = airsim_api->simGetImages(camera_name, VehicleCameraBase::ImageType::Scene);
+   std::vector<ImageResponse*> img_response = airsim_api->simGetImages(camera_name, msr::airlib::VehicleCameraBase::ImageType::Scene);
 
     // if a render request failed for whatever reason, this img will be empty.
     // Attempting to use a make_ts(0) results in ros::Duration runtime error.
-    if (curr_img_response.size() == null || img_response[0]->time_stamp == 0)
+    if (img_response.size() == null || img_response.size() == 0 || img_response[0]->time_stamp == 0)
         continue;
 
     ImageResponse* curr_img_response = img_response[0];
@@ -34,7 +47,7 @@ void doImageUpdate(const ros::TimerEvent&)
     img_msg->data = v;
     img_msg->step = curr_img_response->width * 8; // image_width * num_bytes
     img_msg->header.stamp = make_ts(curr_img_response->time_stamp);
-    img_msg->header.frame_id = frame_id;
+    img_msg->header.frame_id = camera_name+"_optical";
     img_msg->height = curr_img_response->height;
     img_msg->width = curr_img_response->width;
     img_msg->encoding = "bgar8";
@@ -53,7 +66,7 @@ int main(int argc, char ** argv)
     nh.getParam("airsim_ip", airsim_ip);
     airsim_api = new msr::airlib::CarRpcLibClient(airsim_ip);
 
-    image_pub = image_transporter->advertise("/fsds/camera/" + camera_name, 1);
+    image_pub = &image_transporter->advertise("/fsds/camera/" + camera_name, 1);
 
 
     try {
@@ -69,15 +82,3 @@ int main(int argc, char ** argv)
     return 0;
 } 
 
-ros::Time first_imu_ros_ts;
-int64_t first_imu_unreal_ts = -1;
-
-ros::Time AirsimROSWrapper::make_ts(uint64_t unreal_ts)
-{
-    if (first_imu_unreal_ts < 0)
-    {
-        first_imu_unreal_ts = unreal_ts;
-        first_imu_ros_ts = ros::Time::now();
-    }
-    return first_imu_ros_ts + ros::Duration((unreal_ts - first_imu_unreal_ts) / 1e9);
-}
