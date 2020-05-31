@@ -2,7 +2,7 @@
     "SeeDocsAt": "https://github.com/Microsoft/AirSim/blob/master/docs/settings.md",
     "SettingsVersion": 1.2,
     "SimMode": "Car",
-    "ViewMode": "SpringArmChase",
+    "ViewMode": "NoDisplay",
     "ClockSpeed": 1.0,
     "Vehicles": {
       "FSCar": {
@@ -55,7 +55,6 @@
       }
     },
     "SubWindows": [
-      {"WindowID": 0, "ImageType": 0, "CameraName": "front_right_custom", "Visible": true}
     ]
   }
   
