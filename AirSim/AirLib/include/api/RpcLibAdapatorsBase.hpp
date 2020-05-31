@@ -422,34 +422,38 @@ public:
             image_type = s.image_type;
         }
 
-        msr::airlib::ImageCaptureBase::ImageResponse to() const
+        msr::airlib::ImageCaptureBase::ImageResponse* to() const
         {
-            msr::airlib::ImageCaptureBase::ImageResponse d;
+            msr::airlib::ImageCaptureBase::ImageResponse *d = new msr::airlib::ImageCaptureBase::ImageResponse();
 
-            d.pixels_as_float = pixels_as_float;
+            d->pixels_as_float = pixels_as_float;
 
             if (!pixels_as_float)
-                d.image_data_uint8->insert(d.image_data_uint8->begin(), image_data_uint8.front(), image_data_uint8.back());
-            else
-                d.image_data_float = image_data_float;
+            {
+                d->image_data_uint8 = std::make_unique<std::vector<uint8_t>>(image_data_uint8);
 
-            d.camera_name = camera_name;
-            d.camera_position = camera_position.to();
-            d.camera_orientation = camera_orientation.to();
-            d.time_stamp = time_stamp;
-            d.message = message;
-            d.compress = compress;
-            d.width = width;
-            d.height = height;
-            d.image_type = image_type;
+                //d->image_data_uint8->insert(d->image_data_uint8->begin(), image_data_uint8.front(), image_data_uint8.back());
+            }
+            else
+                d->image_data_float = image_data_float;
+
+            d->camera_name = camera_name;
+            d->camera_position = camera_position.to();
+            d->camera_orientation = camera_orientation.to();
+            d->time_stamp = time_stamp;
+            d->message = message;
+            d->compress = compress;
+            d->width = width;
+            d->height = height;
+            d->image_type = image_type;
 
             return d;
         }
 
-        static std::vector<msr::airlib::ImageCaptureBase::ImageResponse> to(
+        static std::vector<msr::airlib::ImageCaptureBase::ImageResponse*> to(
             const std::vector<ImageResponse>& response_adapter
         ) {
-            std::vector<msr::airlib::ImageCaptureBase::ImageResponse> response;
+            std::vector<msr::airlib::ImageCaptureBase::ImageResponse*> response;
             for (const auto& item : response_adapter)
                 response.push_back(item.to());
 
