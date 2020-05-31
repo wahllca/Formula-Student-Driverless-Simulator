@@ -40,8 +40,8 @@
               {
                 "PublishToRos": 1,
                 "ImageType": 0,
-                "Width": 672,
-                "Height": 376,
+                "Width": 1200,
+                "Height": 1200,
                 "FOV_Degrees": 90,
                 "TargetGamma": 1.5
               }
