@@ -78,8 +78,8 @@ int main(int argc, char ** argv)
     ros::NodeHandle nh("~");
     image_transporter = new image_transport::ImageTransport(nh);
 
-    nh.getParam("camera_name", camera_name, "front_right_custom");
-    nh.getParam("airsim_ip", airsim_ip, "localhost");
+    nh.param<std::string>("camera_name", camera_name, "front_right_custom");
+    nh.param<std::string>("airsim_ip", airsim_ip, "localhost");
     airsim_api = new msr::airlib::CarRpcLibClient(airsim_ip);
 
     auto p = image_transporter->advertise("/fsds/camera/" + camera_name, 1);
