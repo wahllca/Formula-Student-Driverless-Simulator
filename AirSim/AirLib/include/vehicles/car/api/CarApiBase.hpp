@@ -100,6 +100,15 @@ public:
         }
 
     };
+    struct CameraA {
+        int width, height;
+        std::vector<unsigned char> data;
+        CameraA()
+        {}
+
+        CameraA(const int& width_val, const int& height_val, const std::vector<unsigned char>& data_val) : width(width_val), height(height_val), data(data_val)
+        {}
+    };
 
 public:
     // TODO: Temporary constructor for the Unity implementation which does not use the new Sensor Configuration Settings implementation.

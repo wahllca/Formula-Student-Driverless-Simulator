@@ -98,6 +98,22 @@ public:
         }
 
     };
+    struct CameraA {
+        int width, height;
+        std::vector<unsigned char> data;
+        MSGPACK_DEFINE_MAP(data, width, height);
+        CameraA() {}
+        CameraA(const msr::airlib::CarApiBase::CameraA& s) {
+            width = s.width;
+            height = s.height;
+            data = s.data;
+        }
+
+        msr::airlib::CarApiBase::CameraA to() const
+        {
+            return msr::airlib::CarApiBase::CameraA(width, height, data);
+        }
+    };
 };
 
 }} //namespace

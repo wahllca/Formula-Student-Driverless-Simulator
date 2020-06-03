@@ -62,6 +62,12 @@ CarRpcLibServer::CarRpcLibServer(ApiProvider* api_provider, string server_addres
 		return CarRpcLibAdapators::RefereeState(RpcLibServerBase::getWorldSimApi()->getRefereeState());
 	});
 
+	(static_cast<rpc::server*>(getServer()))->
+		bind("getCamera", [&]() -> CarRpcLibAdapators::CameraA {
+		return CarRpcLibAdapators::CameraA(RpcLibServerBase::getWorldSimApi()->getCameraA());
+			});
+
+
 }
 
 //required for pimpl

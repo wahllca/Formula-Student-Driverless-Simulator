@@ -76,6 +76,12 @@ CarApiBase::RefereeState CarRpcLibClient::getRefereeState()
 		call("getRefereeState").as<CarRpcLibAdapators::RefereeState>().to();
 }
 
+CarApiBase::CameraA CarRpcLibClient::getCameraA()
+{
+	return static_cast<rpc::client*>(getClient())->
+		call("getCamera").as<CarRpcLibAdapators::CameraA>().to();
+}
+
 
 }} //namespace
 

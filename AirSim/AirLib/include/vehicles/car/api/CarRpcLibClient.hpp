@@ -22,6 +22,7 @@ public:
     CarApiBase::CarState getCarState(const std::string& vehicle_name = "");
 	CarApiBase::CarControls getCarControls(const std::string& vehicle_name = "");
     CarApiBase::RefereeState getRefereeState();
+    CarApiBase::CameraA getCameraA();
     virtual ~CarRpcLibClient();    //required for pimpl
 };
 

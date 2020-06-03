@@ -5,6 +5,7 @@
 #include "Weather/WeatherLib.h"
 #include "DrawDebugHelpers.h"
 #include "Referee.h"
+#include "CamOperator.h"
 
 WorldSimApi::WorldSimApi(ASimModeBase* simmode)
     : simmode_(simmode)
@@ -91,6 +92,15 @@ msr::airlib::CarApiBase::RefereeState WorldSimApi::getRefereeState() const
         AReferee* referee = UAirBlueprintLib::FindActor<AReferee>(simmode_, FString("referee"));
         result = referee ? referee->getState() : msr::airlib::CarApiBase::RefereeState();
     }, true);
+    return result;
+}
+msr::airlib::CarApiBase::CameraA WorldSimApi::getCameraA() const
+{
+    msr::airlib::CarApiBase::CameraA result;
+    UAirBlueprintLib::RunCommandOnGameThread([this, &result]() {
+        ACamOperator* camop = UAirBlueprintLib::FindActor<ACamOperator>(simmode_, FString("CamOperator_1"));
+        result = camop ? camop->getCamera() : msr::airlib::CarApiBase::CameraA();
+        }, true);
     return result;
 }
 

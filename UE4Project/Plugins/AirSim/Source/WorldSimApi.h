@@ -38,6 +38,7 @@ public:
     virtual Pose getObjectPose(const std::string& object_name) const override;
     virtual bool setObjectPose(const std::string& object_name, const Pose& pose, bool teleport) override;
     virtual msr::airlib::CarApiBase::RefereeState getRefereeState() const override;
+    virtual msr::airlib::CarApiBase::CameraA getCameraA() const override;
 
     //----------- Plotting APIs ----------/
     virtual void simFlushPersistentMarkers() override;

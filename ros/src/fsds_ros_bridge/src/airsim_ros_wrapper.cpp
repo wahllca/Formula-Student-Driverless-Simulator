@@ -480,6 +480,13 @@ void AirsimROSWrapper::car_state_timer_cb(const ros::TimerEvent& event)
     {
         std::unique_lock<std::recursive_mutex> lck(car_control_mutex_);
         std::cout << "DOO COUNTER: " << airsim_client_.getRefereeState().doo_counter << std::endl;
+	std::vector<uint8_t> hi(airsim_client_.getCameraA().data);
+	std::cout<<"got camera"<<std::endl;
+	std::cout<<hi.size()<<std::endl;
+        //std::cout << "PIXELS!: " << hi[0] << std::endl;
+        //std::cout << "PIXELS!: " << hi[1] << std::endl;
+        //std::cout << "PIXELS!: " << hi[2] << std::endl;
+        //std::cout << "PIXELS!: " << hi[3] << std::endl;
         lck.unlock();
 
         std::lock_guard<std::recursive_mutex> guard(car_control_mutex_);
