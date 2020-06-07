@@ -39,9 +39,9 @@ void ACamOperator::Tick(float DeltaTime)
 	int j = 0;
 	for (int i = 0; i < exportCamera.width * exportCamera.height * 3; i += 3)
 	{
-		exportCamera.data[i] = SurfData[j].R;
+		exportCamera.data[i] = SurfData[j].B;
 		exportCamera.data[i + 1] = SurfData[j].G;
-		exportCamera.data[i + 2] = SurfData[j].B;
+		exportCamera.data[i + 2] = SurfData[j].R;
 		//exportCamera.data[i + 3] = SurfData[j].A;
 		j++;
 	}
